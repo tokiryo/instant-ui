@@ -78,5 +78,6 @@ can appear inside the chat instead of a browser window.
   (the `io.modelcontextprotocol/ui` extension) when it connects, and for Claude Code in T3 Code
   (`CLAUDE_CODE_ENTRYPOINT=t3-code`), which draws them without declaring it.
   If a harness draws pages but `show_ui_inline` is missing, use `--inline=on`.
+- The page inherits T3 Code's theme: its background, text colors, and font.
 - `show_ui_inline` returns at once; your values arrive as your next chat message, `[instant-ui] <title>` + JSON.
 - `show_ui` still works there and opens a browser window. Use `--inline=off` to offer only that.

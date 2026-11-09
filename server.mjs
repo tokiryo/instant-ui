@@ -58,13 +58,25 @@ const showUiInline = {
   _meta: { ui: { resourceUri: APP_URI } },
 };
 
-// Injected into every page: submit() plus automatic <form> handling.
-const helper = (send) => `<script>
+// Injected into every page: theme variables, base styles, submit() and automatic <form> handling.
+// The variables are the MCP Apps names; in the chat the host's values replace these system-color defaults.
+// Every rule is :where(), so any style the page sets wins.
+const baseStyle = `<style>
+:where(:root){color-scheme:light dark;--color-background-primary:Canvas;--color-background-secondary:Canvas;--color-background-tertiary:Canvas;
+--color-text-primary:CanvasText;--color-text-secondary:GrayText;--color-border-primary:GrayText;--color-border-secondary:GrayText;
+--color-ring-primary:AccentColor;--font-sans:system-ui,sans-serif;--font-mono:ui-monospace,monospace;--border-radius-md:6px}
+:where(html){padding:8px;background:var(--color-background-primary);color:var(--color-text-primary);font:14px/1.5 var(--font-sans)}
+:where(body){margin:0}
+:where(input,select,textarea,button){font:inherit;color:inherit;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}
+:where(code,kbd,pre,samp){font-family:var(--font-mono)}
+:where(:focus-visible){outline:2px solid var(--color-ring-primary)}
+</style>`;
+const helper = (send) => `${baseStyle}<script>
 (() => {
   let sent = false;
   window.submit = async (data) => {
     if (sent) return; sent = true;
-    try { await (${send})(data); document.body.insertAdjacentHTML("beforeend", '<p data-instant-ui-done style="opacity:.7">Sent.</p>'); }
+    try { await (${send})(data); document.body.insertAdjacentHTML("beforeend", '<p data-instant-ui-done style="color:var(--color-text-secondary)">Sent.</p>'); }
     catch (e) { sent = false; alert("Could not send: " + e.message); }
   };
   document.addEventListener("submit", (e) => {
@@ -142,6 +154,13 @@ const appShell = `<!doctype html><html><head><meta charset="utf-8"></head><body>
   const request = (method, params) => new Promise((ok, fail) => { const i = ++id; pending.set(i, { ok, fail }); post({ id: i, method, params }); });
   const resize = () => post({ method: "ui/notifications/size-changed", params: { height: Math.ceil(document.documentElement.getBoundingClientRect().height) } });
   window.__instantUiSend = (data) => request("ui/message", { role: "user", content: [{ type: "text", text: "[instant-ui] " + title + "\\n" + JSON.stringify(data, null, 2) }] });
+  // The host's theme and style variables, so the page takes the chat's colors and font.
+  function applyHost(c) {
+    if (!c) return;
+    const root = document.documentElement;
+    if (c.theme === "light" || c.theme === "dark") root.style.colorScheme = c.theme;
+    for (const [k, v] of Object.entries((c.styles && c.styles.variables) || {})) if (k.startsWith("--")) root.style.setProperty(k, v);
+  }
   function render(args) {
     title = args.title || "";
     const doc = new DOMParser().parseFromString(args.html || "", "text/html");
@@ -161,11 +180,12 @@ const appShell = `<!doctype html><html><head><meta charset="utf-8"></head><body>
     const m = e.data || {};
     if (m.id != null && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.fail(new Error(m.error.message)) : p.ok(m.result); }
     else if (m.method === "ui/notifications/tool-input") render(m.params.arguments || {});
+    else if (m.method === "ui/notifications/host-context-changed") applyHost(m.params);
     else if (m.method === "ui/resource-teardown") post({ id: m.id, result: {} });
   });
   new ResizeObserver(resize).observe(document.documentElement);
   request("ui/initialize", { protocolVersion: "2026-01-26", appInfo: { name: "instant-ui", version: "${VERSION}" }, appCapabilities: {} })
-    .then(() => post({ method: "ui/notifications/initialized", params: {} }));
+    .then((r) => { applyHost(r && r.hostContext); post({ method: "ui/notifications/initialized", params: {} }); });
 })();
 </script>${helper("(d) => window.__instantUiSend(d)")}</body></html>`;
 

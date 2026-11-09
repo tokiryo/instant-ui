@@ -104,5 +104,6 @@ T3 Codeは複数のエージェントハーネス（Claude Code、Codexなど）
 
 - 上記の手順に従い、T3 Codeで使用するハーネスにサーバーを登録してください。追加の特別設定は不要です。
 - `--inline=auto`（デフォルト）の場合、接続時にハーネスがMCP Appsのサポート（`io.modelcontextprotocol/ui` 拡張）を宣言している場合、およびT3 Code上のClaude Code（`CLAUDE_CODE_ENTRYPOINT=t3-code`：宣言なしで描画可能）に対して `show_ui_inline` が提供されます。ハーネスが描画に対応しているにもかかわらず `show_ui_inline` が表示されない場合は、`--inline=on` を指定してください。
+- ページには T3 Code のテーマ（背景、文字色、フォント）が反映されます。
 - `show_ui_inline` は即座に返り、入力値はチャットの次のメッセージ（`[instant-ui] <title> + JSON`）として届きます。
 - T3 Code内でも `show_ui` は引き続き動作し、ブラウザウィンドウを開きます。ブラウザ表示のみに限定したい場合は `--inline=off` を使用してください。

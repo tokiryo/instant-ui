@@ -24,8 +24,13 @@ Write a self-contained HTML page, show it with an instant-ui tool, and use the v
 - For anything that is not a form, call `submit(value)` from a script with any JSON value.
 - One page is sent once. Put everything you need on it; for a next step, show a new page.
 - Make it work without you: live previews, totals, and validation run in the page's own script.
-- Keep it small and readable at 360-720px wide. Use `color-scheme: light dark` and system colors
-  (`Canvas`, `CanvasText`, `AccentColor`) so it fits dark and light hosts.
+- Keep it small and readable at 360-720px wide.
+- Colors: Leave `html` and `body` without a background, font, or padding; instant-ui sets them,
+  and plain inputs, selects, and buttons are already styled. For anything you color yourself, use
+  the variables it provides: `--color-background-secondary` (boxes), `--color-text-secondary`,
+  `--color-border-primary`, `--color-ring-primary` (accent), `--font-mono`, `--border-radius-md`.
+  In chat, they inherit the host's theme; in a browser, they follow the system's light or dark mode.
+  Avoid fixed colors.
 - Label every field; preselect sensible defaults; one clear submit button.
 
 ## Do not

@@ -27,6 +27,7 @@ const pending = s.call("tools/call", { name: "show_ui", arguments: { title: "Pic
 const url = await s.nextUrl();
 const page = await (await fetch(url)).text();
 assert.match(page, /window\.submit/);
+assert.match(page, /--color-background-primary:Canvas/);
 assert.equal((await fetch(url.replace(/\/[^/]+$/, "/wrongtoken"))).status, 404);
 assert.equal((await fetch(url + "/submit", { method: "POST", body: JSON.stringify({ a: "1", b: ["x", "y"] }) })).status, 204);
 const res = JSON.parse((await pending).result.content[0].text);
@@ -48,6 +49,8 @@ assert.equal(inline._meta.ui.resourceUri, "ui://instant-ui/app");
 const app = (await i.call("resources/read", { uri: "ui://instant-ui/app" })).result.contents[0];
 assert.equal(app.mimeType, "text/html;profile=mcp-app");
 assert.match(app.text, /ui\/message/);
+assert.match(app.text, /host-context-changed/);
+assert.match(app.text, /--color-background-primary:Canvas/);
 assert.match((await i.call("tools/call", { name: "show_ui_inline", arguments: { title: "x", html: "x" } })).result.content[0].text, /next message/);
 i.stop();
 
