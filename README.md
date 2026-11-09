@@ -18,7 +18,8 @@ Clone this repository, then register the server with your agent and (if it suppo
 claude mcp add --scope user instant-ui -- node /path/to/instant-ui/server.mjs
 ln -s /path/to/instant-ui/skills/instant-ui ~/.claude/skills/instant-ui
 ```
-In T3 Code (or another MCP Apps host), add `--inline` after `server.mjs` to show pages in the chat.
+To show pages in the chat in T3 Code, add `--inline` after `server.mjs`. It is safe in the plain terminal
+too: the skill uses the inline tool only when the host draws MCP Apps.
 Start a new session afterwards; MCP servers load at session start.
 
 ### Codex
