@@ -59,36 +59,7 @@ Skillsに対応していないエージェントでもツールの説明文は�
 | `show_ui(title, html, timeout_seconds?)` | 常時 | 送信後に `{"submitted":true,"title","values"}`、または `{"submitted":false,"reason"}` |
 | `show_ui_inline(title, html)` | `--inline` を参照 | 即座に返却。入力値は次のメッセージ `[instant-ui] <title> + JSON` として届く |
 
-### 値の送り方 (Sending values)
-ページは値を1回だけ送ります。送り方は次の2つで、どちらも instant-ui がすべてのページに組み込みます。
-
-**フォーム。** どの `<form>` でも、送信する（中のボタンを押す、入力欄で Enter を押す）と、その項目を1つの JSON オブジェクトにして送ります。
-```html
-<form>
-  <label>名前 <input name="name" required></label>
-  <label><input type="checkbox" name="tags" value="a" checked> A</label>
-  <label><input type="checkbox" name="tags" value="b" checked> B</label>
-  <button name="action" value="save">保存</button>
-  <button name="action" value="skip" formnovalidate>スキップ</button>
-</form>
-```
-送られる値: `{"name": "...", "tags": ["a", "b"], "action": "save"}`
-- 送られるのは `name` のある項目だけで、値はすべて文字列です（`<input type="number">` も文字列）。
-- 同じ name が複数あると配列になります。チェックボックスが1つだけ選ばれているときは、配列ではなく文字列のままです。
-- 選ばれていないチェックボックスとラジオボタンは送られません。押したボタンも、`name` があれば送られます。
-- `required`・`min`・`pattern` などの HTML の入力チェックは、送る前に働きます。
-- ファイルの入力欄には対応していません。
-
-**スクリプト。** フォームではないページでは、`submit(値)` を任意の JSON の値で呼びます。
-```html
-<input type="range" id="level" min="0" max="10">
-<button onclick="submit({ level: Number(level.value) })">決定</button>
-```
-
-送ったあと:
-- ページに「Sent.」と出て、それ以降の送信は無視されます。送れなかったときは警告が出て、もう一度送れます。
-- `show_ui`: 呼び出しが `{"submitted": true, "title", "values"}` を返し、ローカルのサーバーが閉じ、Chrome アプリウィンドウなら自動で閉じます。
-- `show_ui_inline`: 値は次のチャットメッセージとして、`[instant-ui] <title>` に続く JSON で届きます。
+ページ内では、すべての `<form>` が送信時に送信されます（`{name: value}` 形式。重複する name は配列化されます）。また、スクリプトから `submit(anyJsonValue)` を直接呼び出すことも可能です。
 
 ---
 
