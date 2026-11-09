@@ -3,10 +3,10 @@ import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import assert from "node:assert/strict";
 
-function start(...args) {
-  const p = spawn(process.execPath, [new URL("server.mjs", import.meta.url).pathname, ...args], {
-    env: { ...process.env, INSTANT_UI_NO_OPEN: "1" },
-  });
+function start(args = [], env = {}) {
+  const base = { ...process.env, INSTANT_UI_NO_OPEN: "1" };
+  delete base.CLAUDE_CODE_ENTRYPOINT; // the test may itself run inside T3 Code
+  const p = spawn(process.execPath, [new URL("server.mjs", import.meta.url).pathname, ...args], { env: { ...base, ...env } });
   const waiting = new Map();
   let id = 0, url;
   const urls = [];
@@ -14,7 +14,8 @@ function start(...args) {
   createInterface({ input: p.stderr }).on("line", (l) => { const u = l.match(/instant-ui: (\S+)/)?.[1]; if (u) urls.push(u); });
   const call = (method, params) => new Promise((ok) => { const i = ++id; waiting.set(i, ok); p.stdin.write(JSON.stringify({ jsonrpc: "2.0", id: i, method, params }) + "\n"); });
   const nextUrl = async () => { while (!urls.length) await new Promise((r) => setTimeout(r, 20)); return urls.shift(); };
-  return { call, nextUrl, stop: () => p.kill() };
+  const exited = new Promise((ok) => p.on("exit", ok));
+  return { call, nextUrl, exited, stop: () => p.kill() };
 }
 
 const s = start();
@@ -40,7 +41,7 @@ assert.equal((await s.call("tools/call", { name: "show_ui_inline", arguments: { 
 s.stop();
 
 // --inline adds the MCP Apps tool and its page.
-const i = start("--inline");
+const i = start(["--inline"]);
 await i.call("initialize", {});
 const inline = (await i.call("tools/list")).result.tools.find((t) => t.name === "show_ui_inline");
 assert.equal(inline._meta.ui.resourceUri, "ui://instant-ui/app");
@@ -49,4 +50,18 @@ assert.equal(app.mimeType, "text/html;profile=mcp-app");
 assert.match(app.text, /ui\/message/);
 assert.match((await i.call("tools/call", { name: "show_ui_inline", arguments: { title: "x", html: "x" } })).result.content[0].text, /next message/);
 i.stop();
+
+// --inline=auto (the default) follows the host (declared MCP Apps support, or Claude Code in T3 Code); off wins even in T3 Code; a bad value stops the server.
+const names = async (args, env, capabilities) => { const t = start(args, env); await t.call("initialize", { capabilities }); const r = (await t.call("tools/list")).result.tools.map((x) => x.name); t.stop(); return r; };
+const t3 = { CLAUDE_CODE_ENTRYPOINT: "t3-code" };
+assert.deepEqual(await names([], t3), ["show_ui", "show_ui_inline"]);
+assert.deepEqual(await names(["--inline=auto"], { CLAUDE_CODE_ENTRYPOINT: "cli" }), ["show_ui"]);
+assert.deepEqual(await names(["--inline=off"], t3), ["show_ui"]);
+const apps = { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } };
+assert.deepEqual(await names([], {}, apps), ["show_ui", "show_ui_inline"]);
+assert.deepEqual(await names(["--inline=off"], {}, apps), ["show_ui"]);
+assert.deepEqual(await names(["--inline=on"]), ["show_ui", "show_ui_inline"]);
+assert.equal(await start(["--inline=maybe"]).exited, 2);
+assert.equal(await start(["--browser=firefox"]).exited, 2);
+assert.deepEqual(await names(["--browser=default"]), ["show_ui"]);
 console.log("ok");

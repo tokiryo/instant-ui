@@ -8,9 +8,8 @@ description: Show the person a small interactive page you write on the spot (for
 Write a self-contained HTML page, show it with an instant-ui tool, and use the values the person sends back.
 
 ## Pick the tool
-- `show_ui_inline` only when it is listed **and** the host draws MCP Apps. Claude Code: run
-  `echo $CLAUDE_CODE_ENTRYPOINT`; only `t3-code` draws them (other hosts: only if you know they do).
-  The page appears in the chat. It returns at once; **end your turn**. The values arrive as the person's
+- `show_ui_inline` when it is listed: the server lists it only where the host draws MCP Apps
+  (or the person turned it on). The page appears in the chat. It returns at once; **end your turn**. The values arrive as the person's
   next message, starting with `[instant-ui] <title>` and then JSON.
 - Otherwise `show_ui`: the page opens in the browser and the call waits until the person submits.
   The result is `{"submitted":true,"title":...,"values":...}` or `{"submitted":false,"reason":...}`.
