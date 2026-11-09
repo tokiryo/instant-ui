@@ -45,7 +45,37 @@ Agents without skills still see the tool descriptions; `skills/instant-ui/SKILL.
 | `show_ui(title, html, timeout_seconds?)` | always | `{"submitted":true,"title","values"}` after you submit, or `{"submitted":false,"reason"}` |
 | `show_ui_inline(title, html)` | see `--inline` | at once; values arrive as your next message, `[instant-ui] <title>` + JSON |
 
-In the page, every `<form>` is sent on submit (`{name: value}`, repeated names become arrays), and scripts can call `submit(anyJsonValue)`.
+## Sending values
+A page sends its values once, in one of two ways. instant-ui adds both to every page.
+
+**A form.** Submitting any `<form>` (a button inside it, or Enter in a field) sends its fields as one JSON object.
+```html
+<form>
+  <label>Name <input name="name" required></label>
+  <label><input type="checkbox" name="tags" value="a" checked> A</label>
+  <label><input type="checkbox" name="tags" value="b" checked> B</label>
+  <button name="action" value="save">Save</button>
+  <button name="action" value="skip" formnovalidate>Skip</button>
+</form>
+```
+Sends `{"name": "...", "tags": ["a", "b"], "action": "save"}`.
+- Only fields with a `name` are sent, and every value is a string (`<input type="number">` too).
+- A name used more than once becomes an array; a single checked checkbox stays a plain string.
+- Unchecked checkboxes and radios are left out. The button that submitted the form is included when it has a `name`.
+- HTML validation (`required`, `min`, `pattern`, ...) runs before sending.
+- File inputs are not supported.
+
+**A script.** Call `submit(value)` with any JSON value, for pages that are not a form:
+```html
+<input type="range" id="level" min="0" max="10">
+<button onclick="submit({ level: Number(level.value) })">Done</button>
+```
+
+After sending:
+- The page shows "Sent." and ignores further submits. If sending fails, it shows an alert and can be sent again.
+- `show_ui`: the call returns `{"submitted": true, "title", "values"}`, the local server closes,
+  and a Chrome app window closes itself.
+- `show_ui_inline`: the values arrive as the person's next chat message, `[instant-ui] <title>` then the JSON.
 
 ## Settings
 - `INSTANT_UI_TIMEOUT` - seconds `show_ui` waits by default (600).

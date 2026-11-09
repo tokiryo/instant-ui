@@ -18,7 +18,9 @@ Write a self-contained HTML page, show it with an instant-ui tool, and use the v
 ## Write the page
 - One self-contained page or fragment: inline `<style>` and `<script>`, no CDN, no network calls.
 - Every `<form>` is sent on submit as `{name: value}`; repeated names (checkboxes) become arrays.
-  Give every field a `name`. A button inside the form submits it.
+  Give every field a `name`. A button inside the form submits it; a named button adds its own value,
+  so several buttons can mean different actions. Values are strings; unchecked boxes are left out;
+  no file inputs.
 - For anything that is not a form, call `submit(value)` from a script with any JSON value.
 - One page is sent once. Put everything you need on it; for a next step, show a new page.
 - Make it work without you: live previews, totals, and validation run in the page's own script.
