@@ -1,5 +1,7 @@
 # instant-ui
 
+[日本語](README.ja.md)
+
 Let a CLI agent show you a small interactive page it writes on the spot, and get back what you enter.
 
 - **Default:** the page opens in your browser; the agent's tool call waits until you submit and gets the values.
